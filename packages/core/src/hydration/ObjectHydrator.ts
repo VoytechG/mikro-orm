@@ -1,7 +1,7 @@
 import type { EntityData, EntityMetadata, EntityProperty } from '../typings';
 import { Hydrator } from './Hydrator';
 import { Collection } from '../entity/Collection';
-import { Reference } from '../entity/Reference';
+import { Reference, ScalarReference } from '../entity/Reference';
 import { parseJsonSafe, Utils } from '../utils/Utils';
 import { ReferenceKind } from '../enums';
 import type { EntityFactory } from '../entity/EntityFactory';
@@ -116,6 +116,14 @@ export class ObjectHydrator extends Hydrator {
         ret.push(`  if (${preCond}typeof data${dataKey} !== 'undefined') entity${entityKey} = data${dataKey} === null ? null : !!data${dataKey};`);
       } else {
         ret.push(`  if (${preCond}typeof data${dataKey} !== 'undefined') entity${entityKey} = data${dataKey};`);
+      }
+
+      if (prop.ref) {
+        context.set('ScalarReference', ScalarReference);
+        ret.push(`  if (entity${entityKey} == null || !entity${entityKey}.__scalarReference) {`);
+        ret.push(`    entity${entityKey} = new ScalarReference(entity${entityKey});`);
+        ret.push(`    entity${entityKey}.bind(entity, '${prop.name}');`);
+        ret.push(`  }`);
       }
 
       return ret;
